@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SalientBot | Salient</title>
+<meta name="description" content="SalientBot is Salient's web crawler. What it reads, how it behaves, and how to ask it to stay away from your website.">
+<link rel="canonical" href="https://salientco.in/bot">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta name="theme-color" content="#090B22">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .bot{min-height:100vh;padding:56px 0 80px;}
+  .bot .wrap{max-width:780px;}
+  .bot__logo img{height:56px;width:auto;margin-bottom:44px;}
+  .bot h1{color:#fff;font-size:clamp(2.2rem,5vw,3.4rem);margin-bottom:18px;}
+  .bot .lede{color:var(--d-text);font-size:1.15rem;line-height:1.6;margin-bottom:40px;max-width:60ch;}
+  .bot h2{color:#fff;font-size:1.35rem;margin:40px 0 12px;letter-spacing:-.015em;}
+  .bot p,.bot li{color:var(--d-soft);line-height:1.7;}
+  .bot ul{list-style:disc;padding-left:1.2em;margin:0;display:grid;gap:6px;}
+  .bot li::marker{color:var(--green);}
+  .bot a{color:#fff;text-decoration:underline;text-underline-offset:3px;}
+  .bot code,.bot pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92rem;}
+  .bot code{color:var(--d-text);background:var(--glass);border:1px solid var(--d-line);border-radius:6px;padding:1px 6px;}
+  .bot pre{color:var(--d-text);background:var(--glass);border:1px solid var(--d-line);border-radius:var(--radius-sm);
+    padding:16px 18px;margin:12px 0 0;overflow-x:auto;line-height:1.6;}
+  .bot .note{margin-top:48px;padding-top:24px;border-top:1px solid var(--d-line);font-size:.95rem;}
+</style>
+</head>
+<body class="dark">
+<main class="hero bot">
+  <div class="hero__bg"><div class="glow-a"></div><div class="glow-b"></div><div class="dots"></div></div>
+  <div class="wrap">
+    <a href="/" class="bot__logo" aria-label="Salient home"><img src="/assets/salient-logo-white.png" alt="Salient" width="300" height="196"></a>
+    <h1>SalientBot</h1>
+    <p class="lede">SalientBot is Salient’s web crawler. If you found this page in your server logs, this is who visited
+      your website, why, and how to ask us to stay away.</p>
+
+    <h2>Who runs it</h2>
+    <p>Salient, a B2B outbound and lead generation company in Bengaluru, India. You can reach us at
+      <a href="mailto:sales@salientco.in">sales@salientco.in</a>.</p>
+
+    <h2>What it does</h2>
+    <p>It reads public pages of company websites to learn about the business: what it sells and to whom, where it is,
+      roughly how large it is, the technologies on its site, and the jobs it is hiring for. We use this to judge which
+      companies may be a good fit for the businesses we work with.</p>
+    <p>It reads a handful of pages per company: the home page, and pages such as about, team, contact and careers.
+      It does not crawl whole websites.</p>
+
+    <h2>How it behaves</h2>
+    <ul>
+      <li>It names itself in every request. Its user agent contains <code>SalientBot</code> and a link to this page.</li>
+      <li>It reads your <code>robots.txt</code> first and follows it, both the rules for <code>SalientBot</code> and the rules
+        for all bots. It honours <code>Crawl-delay</code>.</li>
+      <li>It visits slowly: one visit to a website at a time, at least a minute between visits, and a few seconds between
+        pages. If your site answers <code>429</code> or <code>503</code>, it waits for your <code>Retry-After</code>.
+        If it answers <code>401</code> or <code>403</code>, it stays away for a week.</li>
+      <li>It never logs in, never fills in forms, never solves CAPTCHAs, and never disguises itself or uses proxies.</li>
+      <li>It reads only HTML and text, at most a few megabytes a page.</li>
+    </ul>
+
+    <h2>What we keep</h2>
+    <ul>
+      <li>Facts about the company, and the names and job titles of leaders that the website itself lists.</li>
+      <li>Shared company addresses such as info@ or sales@, never a person’s email address taken from a website.</li>
+      <li>A log of the pages visited (address, status and the first few hundred characters), kept for 90 days. We don’t
+        store copies of your pages.</li>
+    </ul>
+
+    <h2>How to ask it to stay away</h2>
+    <p>Add this to your website’s <code>robots.txt</code>. SalientBot checks it before every visit:</p>
+    <pre>User-agent: SalientBot
+Disallow: /</pre>
+    <p>Or email <a href="mailto:sales@salientco.in?subject=SalientBot%20opt-out">sales@salientco.in</a> with your domain.
+      We add it to our do-not-visit list, and SalientBot won’t read it again.</p>
+
+    <p class="note">Questions about the data we hold about your company, or a request to remove it: write to
+      <a href="mailto:sales@salientco.in">sales@salientco.in</a>.</p>
+  </div>
+</main>
+</body>
+</html>
