@@ -1,41 +1,65 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SalientBot | Salient</title>
 <meta name="description" content="SalientBot is Salient's web crawler. What it reads, how it behaves, and how to ask it to stay away from your website.">
 <link rel="canonical" href="https://salientco.in/bot">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <meta name="theme-color" content="#090B22">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles.css">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&display=swap" rel="stylesheet">
+<!-- Styles are inline so this page doesn't depend on the home page's stylesheet. -->
 <style>
-  .bot{min-height:100vh;padding:56px 0 80px;}
-  .bot .wrap{max-width:780px;}
-  .bot__logo img{height:56px;width:auto;margin-bottom:44px;}
-  .bot h1{color:#fff;font-size:clamp(2.2rem,5vw,3.4rem);margin-bottom:18px;}
-  .bot .lede{color:var(--d-text);font-size:1.15rem;line-height:1.6;margin-bottom:40px;max-width:60ch;}
-  .bot h2{color:#fff;font-size:1.35rem;margin:40px 0 12px;letter-spacing:-.015em;}
-  .bot p,.bot li{color:var(--d-soft);line-height:1.7;}
-  .bot ul{list-style:disc;padding-left:1.2em;margin:0;display:grid;gap:6px;}
-  .bot li::marker{color:var(--green);}
-  .bot a{color:#fff;text-decoration:underline;text-underline-offset:3px;}
-  .bot code,.bot pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92rem;}
-  .bot code{color:var(--d-text);background:var(--glass);border:1px solid var(--d-line);border-radius:6px;padding:1px 6px;}
-  .bot pre{color:var(--d-text);background:var(--glass);border:1px solid var(--d-line);border-radius:var(--radius-sm);
-    padding:16px 18px;margin:12px 0 0;overflow-x:auto;line-height:1.6;}
-  .bot .note{margin-top:48px;padding-top:24px;border-top:1px solid var(--d-line);font-size:.95rem;}
+  :root{--navy:#090B22;--royal:#2433DB;--elec:#3E54FF;--green:#22B026;--green2:#5BD25F;
+    --text:#E4E6F5;--soft:#B4B8D9;--line:rgba(255,255,255,.1);--glass:rgba(255,255,255,.05);
+    --font:"Geist",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:var(--navy);color:#fff;font:400 1rem/1.6 var(--font);-webkit-font-smoothing:antialiased}
+  :focus-visible{outline:2px solid var(--elec);outline-offset:3px;border-radius:6px}
+  .bot{position:relative;overflow:hidden;isolation:isolate;min-height:100vh;padding:56px 0 80px;
+    background:radial-gradient(900px 500px at 85% 0%,rgba(36,51,219,.4),transparent 60%),radial-gradient(700px 400px at 0% 100%,rgba(34,176,38,.1),transparent 60%),var(--navy)}
+  .orb{position:absolute;border-radius:50%;filter:blur(70px);z-index:-1;pointer-events:none}
+  .o1{width:420px;height:420px;right:-60px;top:-40px;background:rgba(62,84,255,.32)}
+  .o2{width:300px;height:300px;left:-90px;bottom:10%;background:rgba(34,176,38,.14)}
+  .bot__mark{position:absolute;width:min(40vw,360px);height:auto;right:-4%;top:120px;opacity:.07;z-index:-1;pointer-events:none}
+  .wrap{width:min(780px,100% - 40px);margin-inline:auto}
+  .bot__logo{display:inline-block;margin-bottom:44px}
+  .bot__logo img{display:block;width:130px;height:auto}
+  h1{font-weight:600;font-size:clamp(2.4rem,5.5vw,3.6rem);letter-spacing:-.05em;line-height:1.02;margin:0 0 18px}
+  .lede{color:var(--text);font-size:1.15rem;line-height:1.6;margin:0 0 40px;max-width:60ch}
+  h2{font-weight:600;font-size:1.35rem;letter-spacing:-.03em;line-height:1.2;margin:44px 0 12px}
+  p,li{color:var(--soft);line-height:1.7}
+  p{margin:0 0 12px}
+  ul{list-style:disc;padding-left:1.2em;margin:0;display:grid;gap:6px}
+  li::marker{color:var(--green2)}
+  a{color:#fff;text-decoration:underline;text-underline-offset:3px}
+  a:hover{color:var(--green2)}
+  code,pre{font-family:var(--mono);font-size:.9rem}
+  code{color:var(--text);background:var(--glass);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+  pre{color:var(--text);background:var(--glass);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0 14px;overflow-x:auto;line-height:1.6}
+  .note{margin-top:48px;padding-top:24px;border-top:1px solid var(--line);font-size:.95rem}
 </style>
 </head>
-<body class="dark">
-<main class="hero bot">
-  <div class="hero__bg"><div class="glow-a"></div><div class="glow-b"></div><div class="dots"></div></div>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="mark" viewBox="0 0 100 104">
+      <path d="M50 0 L50 80 L4 104 Z" fill="#1E9E23"/>
+      <path d="M50 0 L96 104 L50 80 Z" fill="#5BD25F"/>
+    </symbol>
+  </defs>
+</svg>
+<main class="bot">
+  <div class="orb o1" aria-hidden="true"></div><div class="orb o2" aria-hidden="true"></div>
+  <svg class="bot__mark" viewBox="0 0 100 104" aria-hidden="true"><use href="#mark"/></svg>
   <div class="wrap">
-    <a href="/" class="bot__logo" aria-label="Salient home"><img src="/assets/salient-logo-white.png" alt="Salient" width="300" height="196"></a>
+    <a href="/" class="bot__logo" aria-label="Salient home"><img src="/assets/salient-logo-white.png" alt="Salient" width="640" height="404"
+      onerror="this.onerror=null;this.src='assets/salient-logo-white.png'"></a>
     <h1>SalientBot</h1>
     <p class="lede">SalientBot is Salient’s web crawler. If you found this page in your server logs, this is who visited
       your website, why, and how to ask us to stay away.</p>

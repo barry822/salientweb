@@ -1,0 +1,4 @@
+# store text files with LF line endings, whatever editor or OS they come from
+* text=auto
+*.png binary
+*.jpg binary

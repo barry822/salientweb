@@ -4,22 +4,29 @@ A premium single-page site for Salient — managed, multi-channel B2B outbound.
 Positioning: **pay for outcomes, not headcount.**
 
 ```
-salient-site/
-├── index.html     The site (hero + problem + how it works + channels +
-│                  why + pilot + results + contact — one scrolling page)
+salientweb/
+├── index.html     The site (hero + calendar + how we fill your calendar + pay for
+│                  outcomes + three ways + results + pilot + FAQ + contact/booking)
+├── 404.html       "Page not found" page
 ├── styles.css     Brand design system
-├── script.js      Nav, animated pipeline counter, reveals, form handling
+├── script.js      Scroll animations, counters, booking slots, form handling
+├── robots.txt     Lets search engines in, points to the sitemap
+├── sitemap.xml    The page list for Google / Bing
 ├── README.md      This guide
+├── booking-setup/
+│   └── Code.gs    Google Meet booking script (paste into Apps Script; don't upload)
 └── assets/
     ├── salient-logo.png        (colour logo, for light backgrounds)
-    ├── salient-logo-white.png  (white logo, used on the dark header/footer)
-    └── favicon.png             (browser-tab icon)
+    ├── salient-logo-white.png  (white logo, for dark backgrounds)
+    ├── favicon.svg / favicon.png / favicon-32.png   (browser-tab and Google icons)
+    ├── apple-touch-icon.png    (iPhone home-screen icon)
+    └── og-image.png            (1200×630 preview when the link is shared)
 ```
 
 Brand colours: royal blue `#2433DB`, electric blue `#3E54FF`, green `#22B026`, deep navy `#090B22`.
-Fonts: Plus Jakarta Sans (headings) + Inter (body), loaded from Google Fonts.
+Font: Geist (headings and body), loaded from Google Fonts.
 
-The hero numbers (1,240 → 612 → 342 → 87 → 31 → 18) are **illustrative UI mock data**, labelled as such — they are not presented as Salient's actual results. The ChargingAdda figures in the Results section are the real case-study numbers from your deck.
+The hero numbers (1,240 → 612 → 342 → 87 → 31) are **illustrative UI mock data**, labelled as such — they are not presented as Salient's actual results. The ChargingAdda figures in the Results section are the real case-study numbers from your deck.
 
 ---
 
@@ -43,13 +50,49 @@ Until then, the form shows a friendly "not connected yet" message instead of fai
 
 ---
 
+## Step 1b — Google Meet booking for the time slots (15 min)
+
+The time slots on the contact form book a real 30-minute Google Meet on your calendar.
+A small Google Apps Script (free, runs on your Google account) does the booking:
+it shows only times you're free, creates the calendar event with a Meet link, and Google
+emails the invite to the visitor. Formspree still gets a copy of every booking.
+
+Use the Google account whose calendar should receive the calls (ideally the one behind sales@salientco.in).
+
+1. Go to **script.google.com** → **New project**. Name it "Salient booking".
+2. Delete the sample code, then paste in everything from **`booking-setup/Code.gs`**.
+3. Left sidebar → **Services** → **+** → **Google Calendar API** → **Add**.
+3b. **Authorise calendar access once:** pick **`doGet`** in the function dropdown → **Run** →
+    **Review permissions** → your account → (if shown) **Advanced → Go to Salient booking** → **Allow**.
+    Without this the site gets "You do not have permission to call calendar.freebusy.query".
+4. **Deploy** → **New deployment** → gear icon → **Web app**.
+   Description "Salient booking", **Execute as: Me**, **Who has access: Anyone** → **Deploy**.
+   Approve the permissions (calendar access) when Google asks.
+5. Copy the **Web app URL** (it ends in `/exec`).
+6. In **index.html**, find `data-booking="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"`
+   on the contact form and replace the whole URL with yours.
+7. Test: open the site, pick a slot, book with your own email. You should get a calendar
+   invite with a Google Meet link, and the slot shows as "Taken" afterwards.
+
+**Settings** (top of `Code.gs`): call length, start times (default 11:00 and 16:00 IST),
+how many working days ahead (default 3), and an optional colleague to invite.
+If you change the times or number of days, change `SLOT_TIMES` / `WORKING_DAYS` in
+`script.js` to match. After editing `Code.gs`, use **Deploy → Manage deployments → Edit →
+New version** so the same URL picks up the change.
+
+Until the URL is set, picking a slot just sends the preferred time to you through Formspree.
+
+> Don't upload the `booking-setup` folder to Cloudflare — it's only for pasting into Apps Script.
+
+---
+
 ## Step 2 — Put the site online (free, with HTTPS)
 
 **Recommended host: Cloudflare Pages** — free, fast worldwide, automatic HTTPS, works cleanly with a GoDaddy domain. You do *not* need to pay GoDaddy for hosting.
 
 1. Create a free account at **dash.cloudflare.com**.
 2. **Workers & Pages** → **Create** → **Pages** → **Upload assets**.
-3. Project name `salient`. Drag the **contents of the `salient-site` folder** (the files + the `assets` folder) into the box → **Deploy**.
+3. Project name `salient`. Drag the **contents of the `salientweb` folder** (the files + the `assets` folder, but not `booking-setup`) into the box → **Deploy**.
 4. You'll get a live URL like `salient.pages.dev`. Open it, test the page and the form.
 
 *(Netlify works the same way: netlify.com → "Add new site" → "Deploy manually" → drag the folder.)*
@@ -91,10 +134,11 @@ Only worth it if you already pay for a GoDaddy hosting plan. Then: cPanel → **
 - **`sitemap.xml`** and **`robots.txt`** in the site root.
 - **Semantic landmarks** (`<header>`, `<main>`, `<footer>`, labelled nav), one `<h1>`, clean heading order.
 - **Short, keyword-relevant URL** (single page at the root) — nothing is more than one click away.
+- **Structured data for the FAQ** (`FAQPage`) and the site (`WebSite`), matching the visible text word for word.
 - **`404.html`** — a real "page not found" page. Without it, Cloudflare Pages serves the home page for every mistyped URL, which Google sees as duplicate content.
-- **Real numbers in the HTML** — the pipeline and funnel figures are in the page source; the animation only resets them to 0 in the browser.
-- **Icons** — `favicon.png` (512px, what Google shows in search results), `favicon-32.png` for browser tabs, `apple-touch-icon.png` for iPhone home screens.
-- **Sized, lightweight images** — the header/footer logo is 300px wide (~18 KB) with `width`/`height` set, so the page doesn't jump while loading.
+- **Real numbers in the HTML** — the pipeline, target-list and case-study figures are in the page source; the animation only resets them to 0 in the browser.
+- **Icons** — `favicon.svg` (sharp at any size), `favicon.png` (512px, used by Google in search results), `favicon-32.png`, and `apple-touch-icon.png` for iPhone home screens.
+- **Image sizes set** on every `<img>`, so the page doesn't jump while loading.
 
 > As the business grows, the biggest SEO lever is **content**: a few resource/blog pages on topics your buyers search (e.g. "how to build B2B pipeline without hiring SDRs"), each linking back to the homepage. That's when a multi-page structure, categories and internal linking start to matter. Happy to build that when you're ready.
 
