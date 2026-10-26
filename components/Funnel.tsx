@@ -1,58 +1,64 @@
 'use client';
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Mark } from './Mark';
-import type { FunnelScene, TierAnchor } from './funnelScene';
+import type { FunnelParticles, FunnelShape } from './funnelParticles';
 
-/* "How we fill your calendar": a 3D funnel (three.js) stays pinned while the five
-   step cards scroll past; the tier for the card being read lights up. Without
-   WebGL the funnel falls back to flat CSS tiers; the cards work either way. */
+/* "How we fill your calendar": a funnel of light. The screen stays pinned while
+   you scroll through five steps; with each step the funnel narrows (wide target
+   list at the top, a few meetings at the neck) and the step's content changes
+   inside the light. The light is CSS; lead particles falling through it are
+   three.js (loaded only in the browser, skipped without WebGL). */
 
-type Step = { tier: string; url: string; title: string; body: string; visual: ReactNode };
+type Step = { tier: string; title: string; body: string; visual: ReactNode };
 
 const STEPS: Step[] = [
   {
-    tier: 'Target list', url: 'salient / target accounts', title: 'Pick the right companies.',
+    tier: 'Target list', title: 'Pick the right companies.',
     body: 'We agree on who you sell to: the industry, company size, city and the person who signs. That becomes your target list.',
     visual: (
-      <div className="icp">
-        <div className="icp__row"><span>Industry</span><em>Logistics</em><em>Fintech</em><em>SaaS</em></div>
-        <div className="icp__row"><span>Company size</span><em>50 to 500</em></div>
-        <div className="icp__row"><span>Geography</span><em>Bengaluru</em><em>Mumbai</em><em>NCR</em></div>
-        <div className="icp__row"><span>Buyer role</span><em>VP Ops</em><em>CFO</em><em>Founder</em></div>
-        <div className="icp__out"><Mark /><b data-to="2140" className="icpCount">2,140</b><span>companies on your target list</span></div>
-      </div>
+      <>
+        <dl className="lf-icp">
+          <div><dt>Industry</dt><dd><em>Logistics</em><em>Fintech</em><em>SaaS</em></dd></div>
+          <div><dt>Company size</dt><dd><em>50 to 500</em></dd></div>
+          <div><dt>Geography</dt><dd><em>Bengaluru</em><em>Mumbai</em><em>NCR</em></dd></div>
+          <div><dt>Buyer role</dt><dd><em>VP Ops</em><em>CFO</em><em>Founder</em></dd></div>
+        </dl>
+        <p className="lf-out"><b className="icpCount" data-to="2140">2,140</b> companies on your target list</p>
+      </>
     ),
   },
   {
-    tier: 'Ready to buy', url: 'salient / ai engine', title: 'Find who is ready to buy.',
+    tier: 'Ready to buy', title: 'Find who is ready to buy.',
     body: 'We check every company on the list against our database and live signals like hiring, funding and web activity. The ones showing intent go first.',
     visual: (
-      <div className="eng">
-        <ul className="eng__in"><li>Internal database</li><li>Hiring and funding</li><li>Web and tech signals</li><li>Intent activity</li></ul>
-        <div className="eng__core"><Mark /><b>Classification layer</b><span>fit, intent, timing</span></div>
-        <ul className="eng__out"><li className="a"><b>Tier A</b>reach now</li><li className="b"><b>Tier B</b>nurture</li><li className="c"><b>Tier C</b>park</li></ul>
-      </div>
+      <>
+        <ul className="lf-signals"><li>Internal database</li><li>Hiring and funding</li><li>Web and tech signals</li><li>Intent activity</li></ul>
+        <p className="lf-core"><b>Classification layer</b> fit, intent, timing</p>
+        <ul className="lf-tiers"><li className="a"><b>Tier A</b>reach now</li><li className="b"><b>Tier B</b>nurture</li><li className="c"><b>Tier C</b>park</li></ul>
+      </>
     ),
   },
   {
-    tier: 'Reached', url: 'salient / outreach sequence', title: 'Reach out everywhere.',
+    tier: 'Reached', title: 'Reach out everywhere.',
     body: 'Each buyer hears from you by call, email and LinkedIn over a couple of weeks, so they hear from you more than once, on the channel they answer.',
     visual: (
-      <div className="seq">
-        <div className="seq__days"><span /><span>Day 1</span><span>Day 3</span><span>Day 5</span><span>Day 8</span></div>
-        <div className="seq__lane"><span>Call</span><i style={{ '--c': 1 } as CSSProperties} /><i className="off" /><i className="off" /><i style={{ '--c': 4 } as CSSProperties} /></div>
-        <div className="seq__lane"><span>Email</span><i className="off" /><i style={{ '--c': 2 } as CSSProperties} /><i className="off" /><i style={{ '--c': 5 } as CSSProperties} /></div>
-        <div className="seq__lane"><span>LinkedIn</span><i className="off" /><i className="off" /><i style={{ '--c': 3 } as CSSProperties} /><i className="off" /></div>
-        <p className="seq__reply"><Mark />Replied on LinkedIn, day 5</p>
+      <div className="lf-seq">
+        <div className="lf-seq__row lf-seq__days"><span /><span>Day 1</span><span>Day 3</span><span>Day 5</span><span>Day 8</span></div>
+        {([['Call', [1, 0, 0, 4]], ['Email', [0, 2, 0, 5]], ['LinkedIn', [0, 0, 3, 0]]] as const).map(([ch, dots]) => (
+          <div className="lf-seq__row" key={ch}>
+            <span>{ch}</span>
+            {dots.map((c, k) => <i key={k} className={c ? '' : 'off'} style={c ? ({ '--c': c } as CSSProperties) : undefined} />)}
+          </div>
+        ))}
+        <p className="lf-reply">Replied on LinkedIn, day 5</p>
       </div>
     ),
   },
   {
-    tier: 'Qualified', url: 'salient / qualifying call', title: 'Call and qualify.',
+    tier: 'Qualified', title: 'Call and qualify.',
     body: "When a buyer responds, we talk to them and check them against your criteria. Anyone who doesn't fit stops here.",
     visual: (
-      <ol className="conv">
+      <ol className="lf-checks">
         <li><b>Call</b><span>Lead picks up</span></li>
         <li><b>Qualify</b><span>Your criteria checked</span></li>
         <li><b>Decision-maker?</b><span>Yes</span></li>
@@ -62,79 +68,48 @@ const STEPS: Step[] = [
     ),
   },
   {
-    tier: 'Meetings', url: 'salient / your calendar', title: 'Qualified meetings.',
+    tier: 'Meetings', title: 'Qualified meetings.',
     body: 'The meeting lands on your calendar with notes on the buyer and what they need. You show up and close.',
     visual: (
-      <ul className="mtg">
-        <li><time>Tue, 11:00</time><b>Head of Ops, 3PL company</b><span>Needs: route planning, 40 trucks</span></li>
-        <li><time>Wed, 3:00</time><b>CFO, NBFC</b><span>Needs: collections tooling this quarter</span></li>
-        <li><time>Thu, 9:00</time><b>Founder, B2B SaaS</b><span>Needs: pipeline for India launch</span></li>
-        <li className="tot"><Mark /><b>Booked on your calendar</b><span>You close</span></li>
-      </ul>
+      <>
+        <ul className="lf-mtg">
+          <li><time>Tue, 11:00</time><b>Head of Ops, 3PL company</b><span>Needs: route planning, 40 trucks</span></li>
+          <li><time>Wed, 3:00</time><b>CFO, NBFC</b><span>Needs: collections tooling this quarter</span></li>
+          <li><time>Thu, 9:00</time><b>Founder, B2B SaaS</b><span>Needs: pipeline for India launch</span></li>
+        </ul>
+        <p className="lf-booked"><b>Booked on your calendar.</b> You close.</p>
+      </>
     ),
   },
 ];
 
+/* funnel width at the mouth, the shoulder and the neck for each step, as a share of
+   the screen width: it narrows step by step. On desktop the shoulder sits on the
+   straight line (a plain cone); on phones the bowl stays wide where the content is
+   and the spout below the shoulder does the narrowing. */
+const WIDE = { top: [0.9, 0.8, 0.71, 0.63, 0.56], bot: [0.36, 0.3, 0.25, 0.2, 0.16], shoulder: null, sy: 0.74 };
+const NARROW = { top: [1.08, 1.04, 1.0, 0.97, 0.94], shoulder: [1.0, 0.95, 0.9, 0.86, 0.82], bot: [0.5, 0.42, 0.34, 0.27, 0.2], sy: 0.74 };
+
+const clamp = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
+const smooth = (x: number) => x * x * (3 - 2 * x);
+
 export default function Funnel() {
   const [active, setActive] = useState(0);
-  const [mode, setMode] = useState<'flat' | '3d'>('flat');
   const sectionRef = useRef<HTMLElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<(HTMLElement | null)[]>([]);
-  const labelRefs = useRef<(HTMLLIElement | null)[]>([]);
-  const sceneRef = useRef<FunnelScene | null>(null);
+  const particles = useRef<FunnelParticles | null>(null);
   const activeRef = useRef(0);
 
-  /* 3D scene: loaded only in the browser, only when WebGL is available */
-  useEffect(() => {
-    let cancelled = false, visible = false, scene: FunnelScene | null = null, io: IntersectionObserver | null = null;
-    const onVis = () => { if (document.hidden) scene?.stop(); else if (visible) scene?.start(); };
-    import('./funnelScene').then(({ FunnelScene, webglAvailable }) => {
-      if (cancelled || !canvasRef.current || !webglAvailable()) return;
-      try {
-        scene = new FunnelScene(canvasRef.current, {
-          reduceMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-          compact: canvasRef.current.clientWidth < 520,
-          onLayout: (anchors: TierAnchor[]) => anchors.forEach((a, i) => {
-            const li = labelRefs.current[i];
-            if (li) { li.style.setProperty('--x', `${a.x}px`); li.style.setProperty('--y', `${a.y}px`); }
-          }),
-        });
-      } catch {
-        return;   // WebGL failed to start: keep the flat funnel
-      }
-      sceneRef.current = scene;
-      scene.setFocus(activeRef.current + 0.5);
-      setMode('3d');
-      io = new IntersectionObserver(([e]) => {
-        visible = e.isIntersecting;
-        if (visible && !document.hidden) scene!.start(); else scene!.stop();
-      });
-      io.observe(sectionRef.current!);
-      document.addEventListener('visibilitychange', onVis);
-    });
-    return () => {
-      cancelled = true;
-      io?.disconnect();
-      document.removeEventListener('visibilitychange', onVis);
-      scene?.dispose();
-      sceneRef.current = null;
-    };
-  }, []);
-
-  /* the reading line: mid-screen on desktop; on phones just under the funnel
-     where it sits once pinned (not where it happens to be before it pins) */
-  const readingLine = () => {
-    const stage = stageRef.current!;
-    if (!window.matchMedia('(max-width: 980px)').matches) return window.innerHeight * 0.5;
-    return (parseFloat(getComputedStyle(stage).top) || 0) + stage.offsetHeight + 80;
-  };
-
-  /* scroll: which step is being read, as a continuous position (0..5) */
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const icp = sectionRef.current?.querySelector<HTMLElement>('.icpCount');
+    const sticky = stickyRef.current!, track = trackRef.current!;
+    let shape: FunnelShape | null = null;
+
+    // the 2,140 on step 1 counts up the first time it's shown
+    const icp = sticky.querySelector<HTMLElement>('.icpCount');
     let icpDone = false;
     if (icp && !reduce) icp.textContent = '0';
     const countIcp = () => {
@@ -153,74 +128,109 @@ export default function Funnel() {
     let ticking = false;
     const update = () => {
       ticking = false;
-      const cards = cardRefs.current.filter(Boolean) as HTMLElement[];
-      if (!cards.length || !stageRef.current) return;
-      const line = readingLine();
-      let f = 0;
-      cards.forEach((c, i) => {
-        const top = c.getBoundingClientRect().top;
-        if (top > line) return;
-        const next = cards[i + 1]?.getBoundingClientRect().top ?? top + c.offsetHeight * 1.4;
-        f = i + Math.min(1, (line - top) / Math.max(1, next - top));
-      });
-      sceneRef.current?.setFocus(f);
-      const a = Math.min(STEPS.length - 1, Math.floor(f));
+      const vh = window.innerHeight, r = track.getBoundingClientRect();
+      const progress = clamp(-r.top / Math.max(1, r.height - vh));
+      const f = progress * STEPS.length;                       // 0 .. 5 through the steps
+      const i = Math.min(STEPS.length - 1, Math.floor(f));
+      // narrow towards the next step's width over the last 40% of each step
+      const k = i < STEPS.length - 1 ? smooth(clamp((f - i - 0.6) / 0.4)) : 0;
+      const w = sticky.clientWidth, h = sticky.clientHeight;
+      const set = w < 700 ? NARROW : WIDE;
+      const lerp = (a: number[]) => a[i] + (a[Math.min(i + 1, a.length - 1)] - a[i]) * k;
+      const topW = Math.min(lerp(set.top) * w, 1240), botW = lerp(set.bot) * w;
+      const shoulderW = set.shoulder ? lerp(set.shoulder) * w : topW + (botW - topW) * set.sy;
+      const mouthY = headRef.current!.offsetTop + headRef.current!.offsetHeight + 14;
+      const neckY = h - (w < 700 ? 44 : 64);
+      const green = smooth(clamp((f - 3.55) / 0.45));          // the light turns green for the meetings
+      const s = sticky.style;
+      s.setProperty('--mouth', `${mouthY}px`); s.setProperty('--neck', `${neckY}px`);
+      s.setProperty('--tw', `${topW}px`); s.setProperty('--bw', `${botW}px`);
+      s.setProperty('--sw', `${shoulderW}px`); s.setProperty('--sy', `${set.sy * 100}%`);
+      s.setProperty('--green', green.toFixed(3));
+      shape = { cx: w / 2, mouthY, neckY, poolY: h + 10, topW, botW, shoulderW, shoulderAt: set.sy };
+      particles.current?.setShape(shape);
+
+      const a = Math.min(STEPS.length - 1, Math.floor(f + 0.2));   // content swaps as the funnel narrows
       if (a !== activeRef.current) { activeRef.current = a; setActive(a); }
-      const sec = sectionRef.current!.getBoundingClientRect();
-      if (sec.top < window.innerHeight * 0.6 && sec.bottom > 0) countIcp();
+      if (r.top < vh * 0.6 && r.bottom > 0) countIcp();
     };
     const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll);
     update();
-    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll); };
+
+    // lead particles: three.js, browser only, only with WebGL, only while on screen
+    let cancelled = false, visible = false, io: IntersectionObserver | null = null;
+    const onVis = () => { if (document.hidden) particles.current?.stop(); else if (visible) particles.current?.start(); };
+    import('./funnelParticles').then(({ FunnelParticles, webglAvailable }) => {
+      if (cancelled || !canvasRef.current || !webglAvailable()) return;
+      try { particles.current = new FunnelParticles(canvasRef.current, reduce); } catch { return; }
+      if (shape) particles.current.setShape(shape);
+      io = new IntersectionObserver(([e]) => {
+        visible = e.isIntersecting;
+        if (visible && !document.hidden) particles.current?.start(); else particles.current?.stop();
+      });
+      io.observe(sectionRef.current!);
+      document.addEventListener('visibilitychange', onVis);
+    });
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      io?.disconnect();
+      document.removeEventListener('visibilitychange', onVis);
+      particles.current?.dispose();
+      particles.current = null;
+    };
   }, []);
 
-  /* tier labels jump to their step */
+  /* step markers jump to the middle of their step */
   const goTo = (i: number) => {
-    const card = cardRefs.current[i];
-    if (!card || !stageRef.current) return;
-    const line = readingLine();
+    const track = trackRef.current!;
+    const top = window.scrollY + track.getBoundingClientRect().top;
+    const span = track.offsetHeight - window.innerHeight;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: window.scrollY + card.getBoundingClientRect().top - line + 24, behavior: reduce ? 'auto' : 'smooth' });
+    window.scrollTo({ top: top + span * ((i + 0.3) / STEPS.length), behavior: reduce ? 'auto' : 'smooth' });
   };
 
   return (
-    <section className={`funnel dark funnel--${mode}`} id="how" ref={sectionRef}>
-      <div className="wrap funnel__g">
-        <header className="funnel__head">
-          <h2>How we fill your calendar.</h2>
-          <p>Five steps, from a list of companies to a meeting on your calendar. Every lead runs through the same funnel, and only the ones that fit come out the bottom.</p>
-        </header>
+    <section className="lf dark" id="how" ref={sectionRef}>
+      <div className="lf__track" ref={trackRef}>
+        <div className="lf__sticky" ref={stickyRef}>
+          <div className="lf__light" aria-hidden="true">
+            <div className="lf__halo"><div className="lf__cone lf__cone--halo" /></div>
+            <div className="lf__cone lf__cone--blue" />
+            <div className="lf__cone lf__cone--green" />
+            <div className="lf__mouth" />
+            <div className="lf__neck" />
+            <div className="lf__pool" />
+          </div>
+          <div className="lf__canvas" ref={canvasRef} />
 
-        <div className="funnel__stage" ref={stageRef}>
-          <div className="funnel__canvas" ref={canvasRef} />
-          <ol className="funnel__tiers" aria-label="The five steps">
+          <div className="lf__head wrap" ref={headRef}>
+            <h2>How we fill your calendar.</h2>
+            <ol className="lf__rail" aria-label="The five steps">
+              {STEPS.map((s, i) => (
+                <li key={s.tier} className={i === active ? 'on' : i < active ? 'done' : ''}>
+                  <button type="button" onClick={() => goTo(i)} aria-current={i === active ? 'step' : undefined}>
+                    <span>0{i + 1}</span><b>{s.tier}</b>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div className="lf__steps">
             {STEPS.map((s, i) => (
-              <li key={s.tier} ref={(el) => { labelRefs.current[i] = el; }} className={i === active ? 'on' : i < active ? 'done' : ''}
-                style={{ '--w': `${100 - i * 13}%` } as CSSProperties}>
-                <button type="button" onClick={() => goTo(i)} aria-current={i === active ? 'step' : undefined}>
-                  <span>0{i + 1}</span>{s.tier}
-                </button>
-              </li>
+              <article key={s.tier} className={`lfs${i === active ? ' on' : i < active ? ' past' : ''}`}>
+                <p className="lfs__n">Step {i + 1} <span>· {s.tier}</span></p>
+                <h3>{s.title}</h3>
+                <p className="lfs__body">{s.body}</p>
+                <div className="lfs__visual">{s.visual}</div>
+              </article>
             ))}
-          </ol>
-        </div>
-
-        <div className="funnel__steps">
-          {STEPS.map((s, i) => (
-            <article key={s.url} className={`fstep${i === active ? ' on' : ''}`} ref={(el) => { cardRefs.current[i] = el; }}>
-              <div className="box__bar"><i /><i /><i /><span>{s.url}</span></div>
-              <div className={`sp${i === active ? ' on' : ''}`}>
-                <div className="sp__t">
-                  <span className="sp__n">Step {i + 1}</span>
-                  <h3>{s.title}</h3>
-                  <p>{s.body}</p>
-                </div>
-                {s.visual}
-              </div>
-            </article>
-          ))}
+          </div>
         </div>
       </div>
     </section>
