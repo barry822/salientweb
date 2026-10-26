@@ -1,0 +1,7 @@
+.nf{min-height:100vh;min-height:100dvh;display:grid;place-items:center;text-align:center;padding:48px 0}
+.mark{position:absolute;width:min(46vw,420px);height:auto;aspect-ratio:100/104;right:-6%;bottom:-8%;opacity:.12;z-index:-1;pointer-events:none}
+.logo{display:inline-block;margin-bottom:44px}
+.logo img{width:150px;height:auto;margin:0 auto}
+.h1{font-size:clamp(2.4rem,6vw,4.2rem);max-width:15ch;margin:0 auto 18px}
+.p{color:#9AA1D6;max-width:42ch;margin:0 auto 34px;font-size:1.08rem}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}

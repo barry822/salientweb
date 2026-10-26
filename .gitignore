@@ -4,3 +4,10 @@
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Next.js
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
