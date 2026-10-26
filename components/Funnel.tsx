@@ -87,8 +87,9 @@ const STEPS: Step[] = [
    the screen width: it narrows step by step. On desktop the shoulder sits on the
    straight line (a plain cone); on phones the bowl stays wide where the content is
    and the spout below the shoulder does the narrowing. */
-const WIDE = { top: [0.9, 0.8, 0.71, 0.63, 0.56], bot: [0.36, 0.3, 0.25, 0.2, 0.16], shoulder: null, sy: 0.74 };
-const NARROW = { top: [1.08, 1.04, 1.0, 0.97, 0.94], shoulder: [1.0, 0.95, 0.9, 0.86, 0.82], bot: [0.5, 0.42, 0.34, 0.27, 0.2], sy: 0.74 };
+// steps 1-3 shrink 1.15x as much as the original design; steps 4-5 keep their original shrink
+const WIDE = { top: [0.9, 0.785, 0.682, 0.602, 0.532], bot: [0.36, 0.291, 0.234, 0.184, 0.144], shoulder: null, sy: 0.74 };
+const NARROW = { top: [1.08, 1.034, 0.988, 0.958, 0.928], shoulder: [1.0, 0.943, 0.885, 0.845, 0.805], bot: [0.5, 0.408, 0.316, 0.246, 0.176], sy: 0.74 };
 
 const clamp = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const smooth = (x: number) => x * x * (3 - 2 * x);
