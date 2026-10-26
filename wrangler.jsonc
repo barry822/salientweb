@@ -1,0 +1,11 @@
+// Cloudflare Worker "salientweb": serves the static Next.js export in out/.
+// Build command (Cloudflare dashboard): npm run build    Deploy command: npx wrangler deploy
+{
+  "name": "salientweb",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./out",
+    "not_found_handling": "404-page",   // unknown URLs get out/404.html with a 404 status
+    "html_handling": "auto-trailing-slash"   // /bot serves out/bot.html
+  }
+}

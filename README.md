@@ -55,19 +55,21 @@ npm run preview      # serve out/ at http://localhost:3000 to check the build
 
 ## Deploying on Cloudflare
 
-The GitHub repo is connected to Cloudflare, so every push to `main` builds and goes live. Build settings:
+The site is the Cloudflare **Worker `salientweb`**, connected to this GitHub repo: every push to `main`
+builds and goes live; pushes to other branches build a preview version without touching the live site.
+
+`wrangler.jsonc` tells the Worker to serve `out/`, to answer unknown URLs with `out/404.html`, and to
+serve `/bot` from `bot.html`. Build settings (**Workers & Pages → salientweb → Settings → Build**):
 
 | Setting | Value |
 |---|---|
-| Framework preset | Next.js (Static HTML Export), or None |
 | Build command | `npm run build` |
-| Build output directory | `out` |
-| Node version | from `.node-version` (22). If your build image ignores it, set the environment variable `NODE_VERSION` = `22`. |
+| Deploy command | `npx wrangler deploy` |
+| Non-production branch deploy command | `npx wrangler versions upload` (the default) |
+| Root directory | `/` (leave empty) |
+| Node version | from `.node-version` (22); if ignored, add the build variable `NODE_VERSION` = `22` |
 
-- **Cloudflare Pages** serves `out/404.html` automatically for missing pages.
-- **Cloudflare Workers** (static assets): add a `wrangler.jsonc` at the repo root with the Worker's exact name:
-  `{ "name": "<your-worker-name>", "compatibility_date": "2026-10-01", "assets": { "directory": "./out", "not_found_handling": "404-page" } }`
-  and use `npx wrangler deploy` as the deploy command.
+Check locally exactly as Cloudflare will serve it: `npm run build` then `npx wrangler dev`.
 
 ### Domain
 `salientco.in` is attached as a custom domain on the Cloudflare project (DNS is on Cloudflare).
@@ -116,7 +118,10 @@ After editing `Code.gs`: **Deploy → Manage deployments → Edit → New versio
 - Icons for browser tabs, Google results and iPhone home screens; sizes set on every image.
 
 ### Still to do at launch
-1. **Google Search Console:** verify (the file is in `public/`), then submit `https://salientco.in/sitemap.xml`. Same in Bing Webmaster Tools.
+1. **Google Search Console:** add a **Domain** property for `salientco.in` and verify it with the DNS record it gives you
+   (Search Console can add it to Cloudflare for you); that covers www, http and https at once. Then submit
+   `https://salientco.in/sitemap.xml`. Same in Bing Webmaster Tools. (The HTML-file method also works in principle,
+   but Cloudflare serves `/google…html` via a redirect to `/google…`, which Google's check may not accept.)
 2. **Analytics:** create a GA4 property at analytics.google.com → copy the Measurement ID (`G-XXXXXXXXXX`)
    into `GA_ID` at the top of `app/layout.tsx`, then commit and push.
 3. **LinkedIn company page:** send the URL to add it to the structured data.
