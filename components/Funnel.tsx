@@ -1,13 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import type { FunnelParticles, FunnelShape } from './funnelParticles';
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 
-/* "How we fill your calendar": a funnel of light. The screen stays pinned while
-   you scroll through five steps; with each step the funnel narrows (wide target
-   list at the top, a few meetings at the neck) and the step's content changes
-   inside the light. The light is CSS; lead particles falling through it are
-   three.js (loaded only in the browser, skipped without WebGL). */
+/* "How we fill your calendar": a flat funnel that fills tier by tier as you
+   scroll through the five steps beside it. The funnel's shape is built here
+   (so it's in the page's HTML); scrolling sets how far it's filled. */
 
 type Step = { tier: string; title: string; body: string; visual: ReactNode };
 
@@ -83,35 +80,49 @@ const STEPS: Step[] = [
   },
 ];
 
-/* funnel width at the mouth, the shoulder and the neck for each step, as a share of
-   the screen width: it narrows step by step. On desktop the shoulder sits on the
-   straight line (a plain cone); on phones the bowl stays wide where the content is
-   and the spout below the shoulder does the narrowing. */
-// steps 1-3 shrink 1.15x as much as the original design; steps 4-5 keep their original shrink
-const WIDE = { top: [0.9, 0.785, 0.682, 0.602, 0.532], bot: [0.36, 0.291, 0.234, 0.184, 0.144], shoulder: null, sy: 0.74 };
-const NARROW = { top: [1.08, 1.034, 0.988, 0.958, 0.928], shoulder: [1.0, 0.943, 0.885, 0.845, 0.805], bot: [0.5, 0.408, 0.316, 0.246, 0.176], sy: 0.74 };
+/* funnel geometry (SVG units): five tiers from `top` to `bot`, then a spout */
+const TONE = ['#8ea3ff', '#7089ff', '#5370f8', '#3049e2', '#22b026'];
+const VB = { w: 440, h: 580, top: 30, bot: 500, tw: 420, bw: 64, gap: 10, spout: 540, sw: 30 };
+const BH = (VB.bot - VB.top) / STEPS.length, CX = VB.w / 2;
+const halfAt = (y: number) => y <= VB.bot
+  ? (VB.tw + ((VB.bw - VB.tw) * (y - VB.top)) / (VB.bot - VB.top)) / 2
+  : (VB.bw + ((VB.sw - VB.bw) * (y - VB.bot)) / (VB.spout - VB.bot)) / 2;
+/** flat trapezoid from y0 to y1 with softly rounded corners */
+function slice(y0: number, y1: number, r = 7) {
+  const P = [[CX - halfAt(y0), y0], [CX + halfAt(y0), y0], [CX + halfAt(y1), y1], [CX - halfAt(y1), y1]];
+  const at = (p: number[], q: number[], t: number) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
+  let s = '';
+  P.forEach((p, i) => {
+    const a = P[(i + 3) % 4], b = P[(i + 1) % 4];
+    const la = Math.hypot(a[0] - p[0], a[1] - p[1]), lb = Math.hypot(b[0] - p[0], b[1] - p[1]);
+    const k = Math.min(r, la / 2, lb / 2), s0 = at(p, a, k / la), s1 = at(p, b, k / lb);
+    s += `${i ? 'L' : 'M'}${s0[0].toFixed(1)} ${s0[1].toFixed(1)}Q${p[0].toFixed(1)} ${p[1].toFixed(1)} ${s1[0].toFixed(1)} ${s1[1].toFixed(1)}`;
+  });
+  return s + 'Z';
+}
+const BANDS = STEPS.map((_, i) => {
+  const y0 = VB.top + i * BH + (i ? VB.gap / 2 : 0), y1 = VB.top + (i + 1) * BH - VB.gap / 2;
+  return { y0, y1, mid: (y0 + y1) / 2, d: slice(y0, y1) };
+});
+const SPOUT = slice(VB.bot + VB.gap / 2, VB.spout, 4);
 
-const clamp = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
-const smooth = (x: number) => x * x * (3 - 2 * x);
+const clamp = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 export default function Funnel() {
-  const [active, setActive] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const stickyRef = useRef<HTMLDivElement>(null);
-  const headRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const particles = useRef<FunnelParticles | null>(null);
-  const activeRef = useRef(0);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const sticky = stickyRef.current!, track = trackRef.current!;
-    let shape: FunnelShape | null = null;
+    const w = window, reduce = w.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const how = sectionRef.current!, svg = svgRef.current!;
+    const arts = Array.from(how.querySelectorAll<HTMLElement>('.lfs'));
+    const rail = Array.from(how.querySelectorAll<HTMLLIElement>('.lf__rail li'));
+    const clip = svg.querySelector('#fzClipR')!, pool = svg.querySelector<SVGElement>('.fz-pool')!;
+    const lbl = Array.from(svg.querySelectorAll('.fz-lbl')), halo = svg.querySelector('#fzHalo')!, haloP = svg.querySelector('#fzHaloP')!;
+    let level = VB.top, active = -1, inView = false, raf = 0, icpDone = false;
 
-    // the 2,140 on step 1 counts up the first time it's shown
-    const icp = sticky.querySelector<HTMLElement>('.icpCount');
-    let icpDone = false;
+    // the 2,140 counts up the first time the section is reached
+    const icp = how.querySelector<HTMLElement>('.icpCount');
     if (icp && !reduce) icp.textContent = '0';
     const countIcp = () => {
       if (icpDone || !icp) return;
@@ -119,119 +130,124 @@ export default function Funnel() {
       if (reduce) { icp.textContent = '2,140'; return; }
       const t0 = performance.now();
       const tick = (t: number) => {
-        const k = Math.min(1, (t - t0) / 1200), e = 1 - Math.pow(1 - k, 3);
-        icp.textContent = Math.round(2140 * e).toLocaleString('en-IN');
+        const k = Math.min(1, (t - t0) / 1200);
+        icp.textContent = Math.round(2140 * (1 - Math.pow(1 - k, 3))).toLocaleString('en-IN');
         if (k < 1) requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
     };
 
-    let ticking = false;
-    const update = () => {
-      ticking = false;
-      const vh = window.innerHeight, r = track.getBoundingClientRect();
-      const progress = clamp(-r.top / Math.max(1, r.height - vh));
-      const f = progress * STEPS.length;                       // 0 .. 5 through the steps
-      const i = Math.min(STEPS.length - 1, Math.floor(f));
-      // narrow towards the next step's width over the last 40% of each step
-      const k = i < STEPS.length - 1 ? smooth(clamp((f - i - 0.6) / 0.4)) : 0;
-      const w = sticky.clientWidth, h = sticky.clientHeight;
-      const set = w < 700 ? NARROW : WIDE;
-      const lerp = (a: number[]) => a[i] + (a[Math.min(i + 1, a.length - 1)] - a[i]) * k;
-      const topW = Math.min(lerp(set.top) * w, 1240), botW = lerp(set.bot) * w;
-      const shoulderW = set.shoulder ? lerp(set.shoulder) * w : topW + (botW - topW) * set.sy;
-      const mouthY = headRef.current!.offsetTop + headRef.current!.offsetHeight + 14;
-      const neckY = h - (w < 700 ? 44 : 64);
-      const green = smooth(clamp((f - 3.55) / 0.45));          // the light turns green for the meetings
-      const s = sticky.style;
-      s.setProperty('--mouth', `${mouthY}px`); s.setProperty('--neck', `${neckY}px`);
-      s.setProperty('--tw', `${topW}px`); s.setProperty('--bw', `${botW}px`);
-      s.setProperty('--sw', `${shoulderW}px`); s.setProperty('--sy', `${set.sy * 100}%`);
-      s.setProperty('--green', green.toFixed(3));
-      shape = { cx: w / 2, mouthY, neckY, poolY: h + 10, topW, botW, shoulderW, shoulderAt: set.sy };
-      particles.current?.setShape(shape);
-
-      const a = Math.min(STEPS.length - 1, Math.floor(f + 0.2));   // content swaps as the funnel narrows
-      if (a !== activeRef.current) { activeRef.current = a; setActive(a); }
-      if (r.top < vh * 0.6 && r.bottom > 0) countIcp();
+    const progress = () => {   // 0 .. 5: how far through the five steps
+      const vh = w.innerHeight;
+      return arts.reduce((p, a) => { const b = a.getBoundingClientRect(); return p + clamp((vh * 0.62 - b.top) / b.height); }, 0);
     };
-    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    update();
-
-    // lead particles: three.js, browser only, only with WebGL, only while on screen
-    let cancelled = false, visible = false, io: IntersectionObserver | null = null;
-    const onVis = () => { if (document.hidden) particles.current?.stop(); else if (visible) particles.current?.start(); };
-    import('./funnelParticles').then(({ FunnelParticles, webglAvailable }) => {
-      if (cancelled || !canvasRef.current || !webglAvailable()) return;
-      try { particles.current = new FunnelParticles(canvasRef.current, reduce); } catch { return; }
-      if (shape) particles.current.setShape(shape);
-      io = new IntersectionObserver(([e]) => {
-        visible = e.isIntersecting;
-        if (visible && !document.hidden) particles.current?.start(); else particles.current?.stop();
+    const fill = (force = false) => {
+      const p = progress(), i = Math.min(STEPS.length - 1, Math.floor(p)), b = BANDS[i];
+      const tgt = p >= STEPS.length - 0.55 ? VB.spout + 10 : p <= 0 ? VB.top - 10 : b.y0 + (p - i) * (b.y1 - b.y0);
+      level = reduce || force ? tgt : level + (tgt - level) * 0.1;
+      if (Math.abs(tgt - level) < 0.2) level = tgt;
+      clip.setAttribute('height', Math.max(0, level).toFixed(1));
+      pool.style.opacity = level >= VB.spout ? '1' : '0';
+      BANDS.forEach((bd, k) => lbl[k].classList.toggle('on', level > bd.mid + 6));
+    };
+    const setStep = () => {
+      const vh = w.innerHeight;
+      let i = 0;
+      arts.forEach((a, k) => { if (a.getBoundingClientRect().top < vh * 0.55) i = k; });
+      if (i === active) return;
+      active = i;
+      arts.forEach((a, k) => { a.classList.toggle('on', k === i); a.classList.toggle('past', k < i); });
+      rail.forEach((li, k) => {
+        li.className = k === i ? 'on' : k < i ? 'done' : '';
+        const b = li.querySelector('button')!;
+        if (k === i) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
       });
-      io.observe(sectionRef.current!);
-      document.addEventListener('visibilitychange', onVis);
+      haloP.setAttribute('d', BANDS[i].d);
+      haloP.setAttribute('fill', i === STEPS.length - 1 ? '#22b026' : '#3e54ff');
+      halo.setAttribute('opacity', '.45');
+    };
+
+    const loop = () => { if (!inView) return; fill(); raf = requestAnimationFrame(loop); };
+    const io = new IntersectionObserver(([e]) => { inView = e.isIntersecting; if (inView) raf = requestAnimationFrame(loop); });
+    io.observe(how);
+
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        setStep();
+        const b = how.getBoundingClientRect();
+        if (b.top < w.innerHeight * 0.6 && b.bottom > 0) countIcp();
+        if (reduce || !inView) fill(true);
+      });
+    };
+    w.addEventListener('scroll', onScroll, { passive: true });
+    w.addEventListener('resize', onScroll);
+    fill(true); setStep(); onScroll();
+
+    // step markers jump to their step
+    const clicks = rail.map((li, k) => {
+      const fn = () => w.scrollTo({ top: w.scrollY + arts[k].getBoundingClientRect().top - 130, behavior: reduce ? 'auto' : 'smooth' });
+      li.querySelector('button')!.addEventListener('click', fn);
+      return () => li.querySelector('button')!.removeEventListener('click', fn);
     });
 
     return () => {
-      cancelled = true;
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-      io?.disconnect();
-      document.removeEventListener('visibilitychange', onVis);
-      particles.current?.dispose();
-      particles.current = null;
+      io.disconnect(); cancelAnimationFrame(raf);
+      w.removeEventListener('scroll', onScroll); w.removeEventListener('resize', onScroll);
+      clicks.forEach((off) => off());
     };
   }, []);
 
-  /* step markers jump to the middle of their step */
-  const goTo = (i: number) => {
-    const track = trackRef.current!;
-    const top = window.scrollY + track.getBoundingClientRect().top;
-    const span = track.offsetHeight - window.innerHeight;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: top + span * ((i + 0.3) / STEPS.length), behavior: reduce ? 'auto' : 'smooth' });
-  };
-
   return (
-    <section className="lf dark" id="how" ref={sectionRef}>
-      <div className="lf__track" ref={trackRef}>
-        <div className="lf__sticky" ref={stickyRef}>
-          <div className="lf__light" aria-hidden="true">
-            <div className="lf__halo"><div className="lf__cone lf__cone--halo" /></div>
-            <div className="lf__cone lf__cone--blue" />
-            <div className="lf__cone lf__cone--green" />
-            <div className="lf__mouth" />
-            <div className="lf__neck" />
-            <div className="lf__pool" />
-          </div>
-          <div className="lf__canvas" ref={canvasRef} />
-
-          <div className="lf__head wrap" ref={headRef}>
-            <h2>How we fill your calendar.</h2>
-            <ol className="lf__rail" aria-label="The five steps">
-              {STEPS.map((s, i) => (
-                <li key={s.tier} className={i === active ? 'on' : i < active ? 'done' : ''}>
-                  <button type="button" onClick={() => goTo(i)} aria-current={i === active ? 'step' : undefined}>
-                    <span>0{i + 1}</span><b>{s.tier}</b>
-                  </button>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          <div className="lf__steps">
+    <section className="lf" id="how" ref={sectionRef}>
+      <div className="wash" data-wash="soft" aria-hidden="true" />
+      <div className="wrap lf__intro"><p className="eyebrow">How it works</p><h2>How we fill your calendar.</h2></div>
+      <div className="lf__bar">
+        <div className="wrap">
+          <ol className="lf__rail" aria-label="The five steps">
             {STEPS.map((s, i) => (
-              <article key={s.tier} className={`lfs${i === active ? ' on' : i < active ? ' past' : ''}`}>
-                <p className="lfs__n">Step {i + 1} <span>· {s.tier}</span></p>
-                <h3>{s.title}</h3>
-                <p className="lfs__body">{s.body}</p>
-                <div className="lfs__visual">{s.visual}</div>
-              </article>
+              <li key={s.tier} className={i === 0 ? 'on' : ''}>
+                <button type="button" aria-current={i === 0 ? 'step' : undefined}><span>0{i + 1}</span><b>{s.tier}</b></button>
+              </li>
             ))}
-          </div>
+          </ol>
+        </div>
+      </div>
+      <div className="wrap lf__g">
+        <div className="lf__funnel" id="funnel" aria-hidden="true">
+          <svg ref={svgRef} viewBox={`0 0 ${VB.w} ${VB.h}`} preserveAspectRatio="xMidYMid meet" role="presentation">
+            <defs>
+              <radialGradient id="fzPool"><stop offset="0" stopColor="#5bd25f" stopOpacity=".5" /><stop offset="1" stopColor="#5bd25f" stopOpacity="0" /></radialGradient>
+              <filter id="fzGlow" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="12" /></filter>
+              <clipPath id="fzClip"><rect id="fzClipR" x="0" y="0" width={VB.w} height="0" /></clipPath>
+            </defs>
+            <ellipse cx={CX} cy={VB.spout + 12} rx="110" ry="22" fill="url(#fzPool)" className="fz-pool" />
+            <g id="fzHalo" filter="url(#fzGlow)" opacity="0"><path id="fzHaloP" d="" fill="#3e54ff" /></g>
+            {BANDS.map((b) => <path key={b.y0} d={b.d} className="fz-flat" />)}
+            <path d={SPOUT} className="fz-flat" />
+            <g clipPath="url(#fzClip)">
+              {BANDS.map((b, i) => <path key={b.y0} d={b.d} fill={TONE[i]} />)}
+              <path d={SPOUT} fill={TONE[4]} />
+            </g>
+            {BANDS.map((b, i) => (
+              <g key={b.y0} className="fz-lbl" data-i={i}>
+                <text x={CX} y={b.mid.toFixed(1)}><tspan className="fz-n">0{i + 1}</tspan><tspan dx="7">{STEPS[i].tier}</tspan></text>
+              </g>
+            ))}
+          </svg>
+        </div>
+        <div className="lf__steps">
+          {STEPS.map((s, i) => (
+            <article key={s.tier} className={`lfs${i === 0 ? ' on' : ''}`}>
+              <p className="lfs__n">Step {i + 1} <span>· {s.tier}</span></p>
+              <h3>{s.title}</h3>
+              <p className="lfs__body">{s.body}</p>
+              <div className="lfs__visual">{s.visual}</div>
+            </article>
+          ))}
         </div>
       </div>
     </section>

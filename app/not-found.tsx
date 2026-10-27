@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: 'Page not found | Salient', robots: {
 
 export default function NotFound() {
   return (
-    <main className={`hero dark ${s.nf}`}>
+    <main className={`dark ${s.nf}`}>
       <MarkSprite />
       <div className="orb o1" aria-hidden="true" /><div className="orb o2" aria-hidden="true" />
       <Mark className={s.mark} />

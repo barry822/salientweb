@@ -2,7 +2,8 @@
 
 The site for Salient — managed, multi-channel B2B outbound. Positioning: **pay for outcomes, not headcount.**
 
-Built with **Next.js** (static export) and **three.js** (the 3D funnel), hosted on **Cloudflare**.
+Built with **Next.js** (static export), hosted on **Cloudflare**. No animation libraries: the funnel is an SVG and the
+backgrounds are painted by a small script (`components/wash.ts`).
 `npm run build` turns it into plain HTML/CSS/JS in `out/`, which Cloudflare serves. There is no server:
 booking runs on a Google Apps Script, the form copy goes to Formspree.
 
@@ -15,10 +16,11 @@ salientweb/
 │   ├── not-found.tsx        "Page not found" (exported as 404.html)
 │   └── bot/page.tsx         /bot — the SalientBot crawler page
 ├── components/
-│   ├── Funnel.tsx           "How we fill your calendar": the five step cards + scroll tracking
-│   ├── funnelScene.ts       The three.js funnel itself (tiers, lead particles, glow)
+│   ├── Funnel.tsx           "How we fill your calendar": the SVG funnel that fills as you scroll, the five steps
+│   ├── wash.ts              Background art: the hero's light and streaks, the soft and dark watercolour washes
 │   ├── BookingForm.tsx      Contact form, IST time slots, Google Meet booking, Formspree copy
-│   ├── Effects.tsx          Scroll effects: nav, progress rail, invoice, calendar, counters
+│   ├── Effects.tsx          Everything else that moves: nav, progress rail, calendar, invoice, "No black box"
+│   │                        tool views, "who runs each stage" panel, reveals, counters, phone booking bar
 │   └── Mark.tsx             The Salient arrow (SVG)
 ├── public/                  Copied to the site as-is
 │   ├── assets/              Logos, client logos, icons, share image
@@ -30,9 +32,10 @@ salientweb/
 ```
 
 Brand colours: royal blue `#2433DB`, electric blue `#3E54FF`, green `#22B026`, deep navy `#090B22`.
-Font: Geist, self-hosted at build time.
+Fonts: Manrope (Geist as fallback), self-hosted at build time.
 
-The hero and funnel numbers (1,240 → 612 → 342 → 87 → 31, the 2,140 target list) are **illustrative**, labelled as such.
+The dashboard, ICP map, signal and funnel numbers (1,240 → 612 → 342 → 87 → 31, the 2,140 target list) are
+**illustrative**, labelled as such.
 The ChargingAdda figures in the Results section are the real case-study numbers.
 
 ---
@@ -48,7 +51,9 @@ npm run build        # the real build, into out/
 npm run preview      # serve out/ at http://localhost:3000 to check the build
 ```
 
-- **Change text:** most copy is in `app/page.tsx`; the five funnel steps are in `components/Funnel.tsx` (`STEPS`).
+- **Change text:** most copy is in `app/page.tsx` (FAQ, comparison table, ways, tool tabs are arrays at the top);
+  the five funnel steps are in `components/Funnel.tsx` (`STEPS`). The rotating examples (toasts, signal accounts,
+  ICP grid) are in `components/Effects.tsx`.
 - **Publish:** commit and push to `main`. Cloudflare builds and deploys it automatically.
 
 ---
@@ -65,7 +70,7 @@ serve `/bot` from `bot.html`. Build settings (**Workers & Pages → salientweb �
 |---|---|
 | Build command | `npm run build` |
 | Deploy command | `npx wrangler deploy` |
-| Non-production branch deploy command | `npx wrangler versions upload` (the default) |
+| Non-production branch deploy command | `npx wrangler preview` (needs the `"previews": {}` block in `wrangler.jsonc`) |
 | Root directory | `/` (leave empty) |
 | Node version | from `.node-version` (22); if ignored, add the build variable `NODE_VERSION` = `22` |
 

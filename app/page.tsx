@@ -10,16 +10,21 @@ const FAQ = [
   ['Which companies do you work with?', 'Any B2B company with a sales-led motion: software, IT services, fintech, logistics, professional services and more.'],
   ['How does pricing work?', 'You pay per qualified meeting booked, with an optional success commission. We scope the commercials to your pilot on a short call.'],
   ['How do we get started?', 'A short scoping call to understand your ICP, then a pilot that proves what converts before you commit long term. Discovery usually starts within days of signing.'],
+  ['What counts as a qualified meeting?', "A meeting with a decision-maker who has a real need this quarter and passes the criteria we agree with you up front. Anyone who doesn't fit stops at qualification and never reaches your calendar."],
+  ['Is there a minimum commitment?', 'You start with a pilot. Month one tests several segments and gives you a written diagnosis, and you commit to more only once the numbers prove out.'],
 ];
 
 const JSON_LD = [
   { '@context': 'https://schema.org', '@type': 'WebSite', '@id': 'https://salientco.in/#website', name: 'Salient', url: 'https://salientco.in/', publisher: { '@id': 'https://salientco.in/#org' } },
   {
-    '@context': 'https://schema.org', '@type': 'ProfessionalService', '@id': 'https://salientco.in/#org', name: 'Salient', url: 'https://salientco.in/',
+    '@context': 'https://schema.org', '@type': 'ProfessionalService', '@id': 'https://salientco.in/#org', name: 'Salient', legalName: 'Salient Private Limited', url: 'https://salientco.in/',
     logo: 'https://salientco.in/assets/salient-logo.png', image: 'https://salientco.in/assets/og-image.png',
     description: 'Managed, multi-channel B2B outbound. Salient builds and runs the outbound function and books qualified sales meetings; clients pay for outcomes, not headcount.',
-    slogan: 'Pay for outcomes, not headcount.', email: 'sales@salientco.in',
-    address: { '@type': 'PostalAddress', addressLocality: 'Bengaluru', addressRegion: 'Karnataka', addressCountry: 'IN' },
+    slogan: 'Pay for outcomes, not headcount.', email: 'sales@salientco.in', telephone: '+91-99807-89559',
+    address: {
+      '@type': 'PostalAddress', streetAddress: '2nd Floor, No. 129, 5th Main Rd, Above Bank of Baroda, 3rd Phase, J. P. Nagar',
+      addressLocality: 'Bengaluru', addressRegion: 'Karnataka', postalCode: '560078', addressCountry: 'IN',
+    },
     areaServed: 'IN', serviceType: ['B2B outbound', 'Lead generation', 'Appointment setting', 'GTM consulting'],
     knowsAbout: ['B2B outbound', 'B2B lead generation', 'sales pipeline generation', 'appointment setting', 'outsourced SDR', 'cold calling', 'cold email', 'LinkedIn outreach'],
   },
@@ -34,6 +39,23 @@ const CLIENTS = [
   { file: 'revspot', name: 'Revspot', w: 189, h: 24 },
   { file: 'the-social-bid', name: 'The Social Bid', w: 60, h: 50 },
   { file: 'verifast', name: 'Verifast', w: 129, h: 28 },
+];
+
+// Salient vs an in-house team vs a typical agency
+const COMPARE = [
+  ['What you pay for', 'Qualified meetings booked, optional success commission', 'Salaries, tools and manager time', 'A monthly retainer or a price per lead'],
+  ['Time to go live', 'Week one', 'Three to six months of hiring and ramp', 'A few weeks of setup'],
+  ['Channels', 'Calls, email and LinkedIn as one sequence', 'Whatever your reps have time for', 'Often email only'],
+  ['Data, dialer and tools', 'Included', 'You buy the licences', 'Sometimes extra'],
+  ['Qualification', 'Checked on a call against your criteria', 'Depends on the rep', 'Form fills and replies, passed on as leads'],
+  ['When someone leaves', 'The playbook and data stay', 'You rehire and ramp again', 'Your account gets a new manager'],
+];
+
+// "No black box" tabs, in the order of the views inside .rep__stage
+const TOOLS = [
+  ['Pipeline dashboard', 'Accounts reached, conversations, qualified meetings and pipeline added, every week.'],
+  ['ICP mapping', 'Your market broken into segments by industry, size, city and buyer role, scored for fit before anyone is contacted.'],
+  ['Account signals', 'Hiring, funding, leadership changes and web activity, ranked so the accounts showing intent are reached first.'],
 ];
 
 const WAYS = [
@@ -57,7 +79,7 @@ export default function Home() {
       <a className="skip" href="#main">Skip to content</a>
       <MarkSprite />
 
-      <header className="nav" id="nav">
+      <header className="nav top" id="nav">
         <div className="wrap nav__in">
           <a href="#top" className="nav__logo" aria-label="Salient home">
             <img className="logo-w" src="/assets/salient-logo-white.png" alt="Salient" width={640} height={404} />
@@ -81,39 +103,20 @@ export default function Home() {
       <main id="main">
         <span id="top" />
 
-        {/* 1. HERO */}
-        <section className="hero dark">
-          <div className="hero__grid" id="heroGrid" aria-hidden="true" />
-          <div className="orb o1" aria-hidden="true" /><div className="orb o2" aria-hidden="true" />
+        {/* 1. HERO: the light and streaks are painted by Effects */}
+        <section className="hero">
+          <div className="wash" id="heroWash" aria-hidden="true" />
           <Mark className="hero__mark" id="heroMark" />
-          <div className="wrap hero__g">
-            <div className="hero__copy">
-              <h1>We build your pipeline. <span className="h1-soft">You close the deals.</span></h1>
-              <p className="lede">Salient runs your outbound end to end: the right accounts, the right people, real qualification, and sales meetings placed straight into your pipeline.</p>
-              <div className="hero__cta">
-                <a className="btn" href="#contact">Book a scoping call</a>
-                <a className="btn btn--ghost" href="#how">See how we build it</a>
-              </div>
-            </div>
-            <div className="engine" id="engine" data-depth=".06" aria-label="Example: a universe of target accounts narrowed to booked meetings">
-              <div className="win__bar"><i /><i /><i /><span>salient / pipeline</span><span className="live"><i />Running</span></div>
-              <div className="engine__stats">
-                <div><span>Meetings booked</span><b>31</b><em>↗ 24% vs last month</em></div>
-                <div><span>Qualified rate</span><b>36%</b><em>of conversations</em></div>
-                <div><span>Pipeline added</span><b>₹1.4 Cr</b><em>this month</em></div>
-              </div>
-              <div className="engine__head"><b>Your pipeline this month</b></div>
-              <ol className="engine__rows">
-                <li data-w="100"><span>Target accounts</span><b data-to="1240">1,240</b><i /></li>
-                <li data-w="62"><span>Contacted</span><b data-to="612">612</b><i /></li>
-                <li data-w="42"><span>Engaged</span><b data-to="342">342</b><i /></li>
-                <li data-w="24"><span>Qualified</span><b data-to="87">87</b><i /></li>
-                <li data-w="14" className="hl"><span>Meetings on your calendar</span><b data-to="31">31</b><i /></li>
-              </ol>
-              <p className="engine__foot"><Mark /><span>A large universe of buyers, narrowed to the conversations worth taking</span></p>
-              <p className="week__note">Illustrative example</p>
+          <div className="wrap hero__copy">
+            <p className="hero__badge"><b>ChargingAdda</b><span><em>3×</em> growth in sourced pipeline</span></p>
+            <h1>We build your pipeline. <span className="h1-soft">You close the deals.</span></h1>
+            <p className="lede">Salient runs your outbound end to end: the right accounts, the right people, real qualification, and sales meetings placed straight into your pipeline.</p>
+            <div className="hero__cta">
+              <a className="btn" href="#contact">Book a scoping call</a>
+              <a className="btn btn--ghost" href="#how">See how we build it</a>
             </div>
           </div>
+          <div className="hero__scroll" aria-hidden="true">Scroll<i /></div>
         </section>
 
         {/* trust: the logo list is repeated once so the scroll loops seamlessly */}
@@ -166,7 +169,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 3. HOW WE FILL YOUR CALENDAR: the 3D funnel */}
+        {/* 3. HOW WE FILL YOUR CALENDAR: the funnel */}
         <Funnel />
 
         {/* 4. PAY FOR OUTCOMES */}
@@ -175,6 +178,7 @@ export default function Home() {
             <div className="fn__sticky">
               <div className="wrap fn__g">
                 <div className="fn__copy">
+                  <p className="eyebrow">Pricing model</p>
                   <h2>Pay for outcomes, not headcount.</h2>
                   <p className="fn__intro">Salient is a function, not a headcount line. This is what outbound costs when you build it in-house. Scroll and watch what you stop paying for.</p>
                   <div className="fn__reasons" id="reasons">
@@ -224,12 +228,48 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 5. THREE WAYS TO PLUG IN */}
+        {/* 5. COMPARISON */}
+        <section className="cmp" id="compare">
+          <div className="wrap">
+            <div className="sec-head rv">
+              <p className="eyebrow">Comparison</p>
+              <h2>Salient vs building it yourself.</h2>
+              <p>Three ways to get outbound pipeline. Only one is priced on the meetings it produces.</p>
+            </div>
+            <div className="cmp__table rv" role="table" aria-label="Salient compared with an in-house SDR team and a typical lead-gen agency">
+              <div className="cmp__row cmp__hd" role="row">
+                <span role="columnheader" /><span className="us" role="columnheader"><Mark />Salient</span>
+                <span role="columnheader">In-house SDR team</span><span role="columnheader">Typical lead-gen agency</span>
+              </div>
+              {COMPARE.map(([k, us, team, agency]) => (
+                <div className="cmp__row" role="row" key={k}>
+                  <b role="rowheader">{k}</b><span className="us" role="cell">{us}</span><span role="cell">{team}</span><span role="cell">{agency}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 6. THREE WAYS TO PLUG IN: the stage panel follows the selected card */}
         <section className="plug" id="plug-in">
           <div className="wrap">
             <div className="sec-head">
+              <p className="eyebrow">Engagement models</p>
               <h2>Three ways to plug Salient in.</h2>
               <p>Wherever your pipeline is today, we take the outbound from there. In every model, you pay for outcomes.</p>
+            </div>
+            <div className="pv rv" id="pv" aria-hidden="true">
+              <div className="pv__top">
+                <div><span className="pv__k">Who runs each stage</span><b className="pv__mode" id="pvMode">{WAYS[0].name}</b><p className="pv__cap" id="pvCap">{WAYS[0].sit}</p></div>
+                <div className="pv__legend"><span><i className="s" />Salient</span><span><i className="y" />Your team</span></div>
+              </div>
+              <div className="pv__track">
+                <span className="pv__line"><i className="pv__dot" /><i className="pv__dot d2" /><i className="pv__dot d3" /></span>
+                {['Target', 'Reach', 'Qualify', 'Book', 'Close'].map((st) => <div className="pv__st" key={st}><b /><span>{st}</span></div>)}
+              </div>
+              <div className="pv__lane"><span className="pv__bar s" id="pvS">Salient</span></div>
+              <div className="pv__lane"><span className="pv__bar y" id="pvY">You</span></div>
+              <p className="pv__foot" id="pvFoot">Salient runs 4 of 5 stages. You take the meeting.</p>
             </div>
             <div className="ways" id="ways">
               {WAYS.map((w) => (
@@ -253,10 +293,11 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 6. PROOF */}
+        {/* 7. PROOF */}
         <section className="proof" id="proof">
           <div className="wrap">
             <div className="sec-head">
+              <p className="eyebrow">Case study</p>
               <h2>What we&apos;ve done for our clients.</h2>
               <p>Here is one engagement, start to finish: what was broken, what we built and what changed.</p>
             </div>
@@ -282,10 +323,75 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 7. PILOT */}
+        {/* 8. NO BLACK BOX: Salient's own tools, rotated by Effects */}
+        <section className="rep" id="report">
+          <div className="wrap">
+            <div className="rep__head rv">
+              <div><p className="what__pre">No black box.</p><h2>You see every number, every week.</h2></div>
+              <p className="rep__body">Salient runs on its own ICP mapping, account-signal engine and pipeline dashboards. You see what we see: who we&apos;re targeting, why now, and what it turned into.</p>
+            </div>
+            <div className="rep__g">
+              <div className="rep__tabs rv" role="tablist" aria-label="Salient tools">
+                {TOOLS.map(([name, desc], k) => (
+                  <button className={k ? 'rt' : 'rt on'} role="tab" aria-selected={k === 0} data-p={k} key={name}>
+                    <span className="rt__n">0{k + 1}</span><b>{name}</b><span className="rt__d">{desc}</span><i className="rt__bar" />
+                  </button>
+                ))}
+                <ul className="rep__chips"><li>Weekly report</li><li>Weekly sync</li><li>Written diagnosis at day 30</li></ul>
+              </div>
+              <div className="rep__stage rv">
+                <div className="rp on" data-p="0">
+                  <div className="engine" id="engine" aria-label="Example: a universe of target accounts narrowed to booked meetings">
+                    <div className="win__bar"><i /><i /><i /><span>salient / pipeline</span><span className="live"><i />Running</span></div>
+                    <div className="engine__stats">
+                      <div><span>Meetings booked</span><b>31</b><em>↗ 24% vs last month</em></div>
+                      <div><span>Qualified rate</span><b>36%</b><em>of conversations</em></div>
+                      <div><span>Pipeline added</span><b>₹1.4 Cr</b><em>this month</em></div>
+                    </div>
+                    <div className="engine__head"><b>Your pipeline this month</b></div>
+                    <ol className="engine__rows">
+                      <li data-w="100"><span>Target accounts</span><b data-to="1240">1,240</b><i /></li>
+                      <li data-w="62"><span>Contacted</span><b data-to="612">612</b><i /></li>
+                      <li data-w="42"><span>Engaged</span><b data-to="342">342</b><i /></li>
+                      <li data-w="24"><span>Qualified</span><b data-to="87">87</b><i /></li>
+                      <li data-w="14" className="hl"><span>Meetings on your calendar</span><b data-to="31">31</b><i /></li>
+                    </ol>
+                    <p className="engine__foot"><Mark /><span>A large universe of buyers, narrowed to the conversations worth taking</span></p>
+                    <p className="week__note">Illustrative example</p>
+                  </div>
+                  <div className="toast" id="toast" aria-hidden="true"><i /><div><b>Meeting booked</b><span>CFO, NBFC · Wed, 3:00</span></div></div>
+                </div>
+                <div className="rp" data-p="1" aria-hidden="true">
+                  <div className="engine icpm">
+                    <div className="win__bar"><i /><i /><i /><span>salient / icp map</span><span className="live"><i />Scoring</span></div>
+                    <div className="icpm__top">
+                      <div><span>Accounts in your ICP</span><b id="icpN" data-to="2140">2,140</b></div>
+                      <div className="icpm__legend"><span>Fit</span><i /><span>Low → high</span></div>
+                    </div>
+                    <div className="icpm__grid" id="icpGrid" />
+                    <div className="icpm__f"><span>Buyer roles</span><div className="icpm__chips" id="icpRoles"><em>VP Ops</em><em>CFO</em><em>Founder</em><em>Head of Sales</em></div></div>
+                    <div className="icpm__f"><span>Cities</span><div className="icpm__chips"><em>Bengaluru</em><em>Mumbai</em><em>NCR</em></div></div>
+                    <p className="week__note">Illustrative example</p>
+                  </div>
+                </div>
+                <div className="rp" data-p="2" aria-hidden="true">
+                  <div className="engine sig">
+                    <div className="win__bar"><i /><i /><i /><span>salient / account signals</span><span className="live"><i />Tracking</span></div>
+                    <div className="sig__head"><b>Accounts showing intent</b><span>Newest signals first</span></div>
+                    <ol className="sig__list" id="sigList" />
+                    <p className="week__note">Illustrative example</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 9. PILOT */}
         <section className="pricing dark" id="pilot">
           <div className="wrap">
             <div className="sec-head">
+              <p className="eyebrow">Getting started</p>
               <h2>Start with a pilot. Scale on proof.</h2>
               <p>Priced per qualified meeting booked, with an optional success commission. You commit to more only once the numbers prove out.</p>
             </div>
@@ -307,9 +413,10 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 8. FAQ */}
+        {/* 10. FAQ */}
         <section className="faq">
           <div className="wrap faq__g">
+            <p className="eyebrow">FAQ</p>
             <h2>Questions, answered.</h2>
             <div>
               {FAQ.map(([q, a]) => (
@@ -319,7 +426,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 9. CONTACT */}
+        {/* 11. CONTACT */}
         <section className="contact" id="contact">
           <div className="wrap">
             <div className="cta">
@@ -341,13 +448,33 @@ export default function Home() {
       </main>
 
       <footer className="foot dark">
-        <div className="wrap foot__in">
-          <img src="/assets/salient-logo-white.png" alt="Salient" width={640} height={404} loading="lazy" />
-          <p>Managed B2B outbound, Bengaluru</p>
-          <nav aria-label="Footer"><a href="mailto:sales@salientco.in">sales@salientco.in</a></nav>
-          <small>© <span id="year">2026</span> Salient</small>
+        <div className="wrap">
+          <div className="foot__top">
+            <div className="foot__brand">
+              <img src="/assets/salient-logo-white.png" alt="Salient" width={640} height={404} loading="lazy" />
+              <p>Managed B2B outbound. We build your pipeline. You close the deals.</p>
+              <a className="btn btn--sm" href="#contact">Book a scoping call</a>
+            </div>
+            <nav className="foot__col" aria-label="Footer">
+              <h4>Explore</h4>
+              <a href="#how">How we build</a><a href="#function">Why Salient</a><a href="#plug-in">Ways to work with us</a><a href="#proof">Results</a><a href="#pilot">Pilot</a>
+            </nav>
+            <div className="foot__col">
+              <h4>Contact</h4>
+              <a href="mailto:sales@salientco.in">sales@salientco.in</a><a href="tel:+919980789559">+91 99807 89559</a><a href="#contact">Book a 30-minute call</a>
+            </div>
+            <div className="foot__col">
+              <h4>Office</h4>
+              <address>Salient Private Limited<br />2nd Floor, No. 129, 5th Main Rd<br />Above Bank of Baroda, 3rd Phase<br />J. P. Nagar, Bengaluru<br />Karnataka 560078</address>
+            </div>
+          </div>
+          <div className="foot__bot"><small>© <span id="year">2026</span> Salient Private Limited. All rights reserved.</small><small>Made in Bengaluru</small></div>
         </div>
       </footer>
+
+      <div className="mcta" id="mcta" role="region" aria-label="Book a call">
+        <span>Free 30-minute scoping call</span><a className="btn btn--sm" href="#contact">Book a call</a>
+      </div>
 
       <Effects />
     </>

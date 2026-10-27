@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist } from 'next/font/google';
+import { Geist, Manrope } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
 
@@ -8,6 +8,7 @@ const GA_ID = '';
 
 // Self-hosted at build time, so visitors don't fetch fonts from Google.
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist', display: 'swap' });
+const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', display: 'swap' });
 
 const SHARE_TITLE = 'Salient: We build your pipeline. You close the deals.';
 const SHARE_DESC = 'Managed, multi-channel B2B outbound. Pay for qualified meetings, not SDR headcount.';
@@ -43,12 +44,12 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#090B22',
+  themeColor: '#F5F6FA',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={geist.variable}>
+    <html lang="en" className={`${geist.variable} ${manrope.variable}`}>
       <body>
         {children}
         {GA_ID && (
