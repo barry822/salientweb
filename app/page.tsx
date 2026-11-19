@@ -34,11 +34,9 @@ const JSON_LD = [
 // client logos: display height h sized so all logos look equally heavy
 const CLIENTS = [
   { file: 'alaiy', name: 'alaiy', w: 85, h: 42 },
-  { file: 'gokwik', name: 'GoKwik', w: 112, h: 32 },
   { file: 'nector', name: 'nector.io', w: 102, h: 35 },
   { file: 'revspot', name: 'Revspot', w: 189, h: 24 },
   { file: 'the-social-bid', name: 'The Social Bid', w: 60, h: 50 },
-  { file: 'verifast', name: 'Verifast', w: 129, h: 28 },
 ];
 
 // Salient vs an in-house team vs a typical agency
@@ -119,13 +117,13 @@ export default function Home() {
           <div className="hero__scroll" aria-hidden="true">Scroll<i /></div>
         </section>
 
-        {/* trust: the logo list is repeated once so the scroll loops seamlessly */}
+        {/* trust: the logos are repeated four times so the strip stays wider than the screen and loops seamlessly */}
         <section className="trust">
           <div className="wrap trust__in">
             <p>Trusted by</p>
             <div className="marq" role="img" aria-label={'Clients: ' + CLIENTS.map((c) => c.name).join(', ')}>
               <ul aria-hidden="true">
-                {[...CLIENTS, ...CLIENTS].map((c, k) => (
+                {[...CLIENTS, ...CLIENTS, ...CLIENTS, ...CLIENTS].map((c, k) => (
                   <li key={k}>
                     <img src={`/assets/clients/${c.file}.png`} alt={k < CLIENTS.length ? c.name : ''} width={c.w} height={c.h}
                       style={{ '--h': c.h } as CSSProperties} loading="lazy" decoding="async" />
